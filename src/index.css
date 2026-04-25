@@ -568,6 +568,103 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+/* Bouton filtres avancés */
+.btn-advanced-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: white;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.btn-advanced-filter:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn-advanced-filter.active {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.filter-badge {
+  background: var(--primary);
+  color: white;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  line-height: 1.4;
+}
+
+/* Panneau filtres avancés */
+.advanced-filters-panel {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.advanced-filters-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.filter-input {
+  font-size: 14px !important;
+  padding: 8px 12px !important;
+}
+
+.btn-reset-filters {
+  margin-top: 12px;
+  padding: 6px 14px;
+  border: none;
+  background: var(--danger-light);
+  color: var(--danger);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.btn-reset-filters:hover {
+  background: #fecaca;
+}
+
 .transactions-summary {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1033,6 +1130,17 @@ body {
   .type-filter-btn {
     flex: 1;
     padding: 8px 10px;
+  }
+
+  .btn-advanced-filter {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* ---- Filtres avancés ---- */
+  .advanced-filters-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
   }
 
   /* ---- Liste de transactions ---- */
