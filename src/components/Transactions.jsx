@@ -329,9 +329,14 @@ export default function Transactions({ session }) {
                 <div key={t.id} className="transaction-item">
                   <div className="transaction-category-icon">{t.categories?.icon || '📦'}</div>
                   <div className="transaction-details">
-                    <span className="transaction-desc">
-                      {t.description || t.categories?.name || '—'}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span className="transaction-desc">
+                        {t.description || t.categories?.name || '—'}
+                      </span>
+                      {t.recurring_id && (
+                        <span className="badge-recurring" title="Générée automatiquement">🔁</span>
+                      )}
+                    </div>
                     <div className="transaction-meta">
                       <span className="transaction-date">
                         {new Date(t.transaction_date).toLocaleDateString('fr-FR', {

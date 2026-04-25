@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 const NAV_ITEMS = [
-  { id: 'dashboard', icon: '📊', label: 'Tableau de bord', short: 'Tableau' },
-  { id: 'transactions', icon: '💳', label: 'Transactions', short: 'Transac.' },
-  { id: 'budget', icon: '🎯', label: 'Objectifs budget', short: 'Objectifs' },
+  { id: 'dashboard',   icon: '📊', label: 'Tableau de bord',          short: 'Tableau'   },
+  { id: 'transactions',icon: '💳', label: 'Transactions',              short: 'Transac.'  },
+  { id: 'recurring',   icon: '🔁', label: 'Récurrences',               short: 'Récurr.'   },
+  { id: 'budget',      icon: '🎯', label: 'Objectifs budget',          short: 'Objectifs' },
 ]
 
 export default function Layout({ children, currentPage, setCurrentPage, session }) {
