@@ -33,6 +33,82 @@ async function fetchMonthData(userId, year, month) {
   return data || []
 }
 
+// ── Calcul du score de santé financière ─────────────────────────────────────
+function computeHealthScore(totalIncome, totalExpenses, balance, byCategory) {
+  if (totalIncome === 0) return null
+
+  const savingsRate = Math.max(0, (balance / totalIncome) * 100)
+  const categories = Object.entries(byCategory).sort((a, b) => b[1] - a[1])
+  const topCatRatio = categories.length > 0 ? (categories[0][1] / totalExpenses) * 100 : 0
+  const housingAmount = (byCategory['Loyer / Logement'] || 0) + (byCategory['Loyer'] || 0)
+  const housingRatio = (housingAmount / totalIncome) * 100
+
+  // Points par indicateur (total 100)
+  const scoreEpargne = savingsRate >= 20 ? 30 : savingsRate >= 10 ? 20 : savingsRate > 0 ? 10 : 0
+  const scoreSolde    = balance > 0 ? 20 : 0
+  const scoreLoyer    = housingAmount === 0 ? 20 : housingRatio <= 33 ? 20 : housingRatio <= 45 ? 12 : 5
+  const scoreDiversite = categories.length === 0 ? 15 : topCatRatio <= 40 ? 30 : topCatRatio <= 60 ? 20 : 10
+
+  const total = scoreEpargne + scoreSolde + scoreLoyer + scoreDiversite
+
+  // Conseils automatiques
+  const tips = []
+  if (balance < 0)
+    tips.push({ icon: '🚨', color: '#EF4444', text: 'Solde négatif ce mois — tes dépenses dépassent tes revenus.' })
+  if (savingsRate < 10 && balance >= 0)
+    tips.push({ icon: '💡', color: '#F59E0B', text: `Taux d'épargne de ${Math.round(savingsRate)}% — vise 10 % minimum pour te constituer une réserve.` })
+  if (savingsRate >= 20)
+    tips.push({ icon: '🏆', color: '#10B981', text: `Excellent taux d'épargne de ${Math.round(savingsRate)}% ! Continue comme ça.` })
+  if (housingAmount > 0 && housingRatio > 33)
+    tips.push({ icon: '🏠', color: '#F97316', text: `Ton logement représente ${Math.round(housingRatio)}% de tes revenus (règle du tiers : max 33 %).` })
+  if (categories.length > 0 && topCatRatio > 60)
+    tips.push({ icon: '📊', color: '#8B5CF6', text: `${categories[0][0]} concentre ${Math.round(topCatRatio)}% de tes dépenses — pense à équilibrer.` })
+  if (categories.length >= 4 && topCatRatio <= 40)
+    tips.push({ icon: '✅', color: '#10B981', text: 'Bonne diversification de tes dépenses entre plusieurs catégories.' })
+  if (tips.length === 0)
+    tips.push({ icon: '👍', color: '#10B981', text: 'Tes finances sont équilibrées ce mois. Beau travail !' })
+
+  // Indicateurs détaillés
+  const indicators = [
+    {
+      label: "Taux d'épargne",
+      value: `${Math.round(savingsRate)} %`,
+      score: scoreEpargne,
+      max: 30,
+      color: savingsRate >= 20 ? '#10B981' : savingsRate >= 10 ? '#F59E0B' : '#EF4444',
+    },
+    {
+      label: 'Solde du mois',
+      value: fmt(balance),
+      score: scoreSolde,
+      max: 20,
+      color: balance >= 0 ? '#10B981' : '#EF4444',
+    },
+    {
+      label: 'Ratio logement / revenus',
+      value: housingAmount > 0 ? `${Math.round(housingRatio)} %` : 'N/A',
+      score: scoreLoyer,
+      max: 20,
+      color: housingRatio <= 33 ? '#10B981' : housingRatio <= 45 ? '#F59E0B' : '#EF4444',
+    },
+    {
+      label: 'Diversification',
+      value: `${categories.length} catégorie${categories.length > 1 ? 's' : ''}`,
+      score: scoreDiversite,
+      max: 30,
+      color: topCatRatio <= 40 ? '#10B981' : topCatRatio <= 60 ? '#F59E0B' : '#EF4444',
+    },
+  ]
+
+  const grade =
+    total >= 80 ? { label: 'Excellent', color: '#10B981', emoji: '🌟' } :
+    total >= 60 ? { label: 'Bien',      color: '#3B82F6', emoji: '👍' } :
+    total >= 40 ? { label: 'Moyen',     color: '#F59E0B', emoji: '⚠️'  } :
+                  { label: 'À revoir',  color: '#EF4444', emoji: '🔴' }
+
+  return { total, grade, tips, indicators }
+}
+
 export default function Reports({ session }) {
   const now = new Date()
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1)
@@ -41,36 +117,24 @@ export default function Reports({ session }) {
   const [barData, setBarData] = useState([])
   const [loading, setLoading] = useState(true)
 
-  // IA
-  const [aiAnalysis, setAiAnalysis] = useState('')
-  const [aiLoading, setAiLoading] = useState(false)
-  const [aiError, setAiError] = useState('')
-
   const years = Array.from({ length: 5 }, (_, i) => now.getFullYear() - i)
 
-  useEffect(() => {
-    loadReport()
-  }, [selectedMonth, selectedYear])
+  useEffect(() => { loadReport() }, [selectedMonth, selectedYear])
 
   const loadReport = async () => {
     setLoading(true)
-    setAiAnalysis('')
-    setAiError('')
-
     const userId = session.user.id
-
-    // Mois sélectionné
     const txns = await fetchMonthData(userId, selectedYear, selectedMonth)
     setTransactions(txns)
 
-    // Comparaison sur 3 mois (mois-2, mois-1, mois actuel)
+    // Comparaison sur 3 mois
     const bars = []
     for (let i = 2; i >= 0; i--) {
       const d = new Date(selectedYear, selectedMonth - 1 - i, 1)
       const m = d.getMonth() + 1
       const y = d.getFullYear()
       const data = await fetchMonthData(userId, y, m)
-      const revenus = data.filter(t => t.categories?.type === 'income').reduce((s, t) => s + parseFloat(t.amount), 0)
+      const revenus  = data.filter(t => t.categories?.type === 'income').reduce((s, t) => s + parseFloat(t.amount), 0)
       const depenses = data.filter(t => t.categories?.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0)
       bars.push({ month: MONTHS_SHORT[m - 1], Revenus: Math.round(revenus), Dépenses: Math.round(depenses) })
     }
@@ -78,45 +142,12 @@ export default function Reports({ session }) {
     setLoading(false)
   }
 
-  const handleAiAnalysis = async () => {
-    setAiLoading(true)
-    setAiError('')
-    setAiAnalysis('')
-    try {
-      const { data, error } = await supabase.functions.invoke('analyze-budget', {
-        body: {
-          transactions,
-          month: selectedMonth,
-          year: selectedYear,
-          monthName: MONTHS_FR[selectedMonth - 1],
-        },
-      })
-      if (error) throw new Error(error.message)
-      if (data?.error) throw new Error(data.error)
-      setAiAnalysis(data.analysis)
-    } catch (err) {
-      setAiError(
-        err.message?.includes('FunctionsFetchError') || err.message?.includes('Failed to send')
-          ? "La fonction IA n'est pas encore configurée. Suivez les instructions pour créer la Supabase Edge Function."
-          : err.message || "Une erreur est survenue lors de l'analyse."
-      )
-    }
-    setAiLoading(false)
-  }
-
   // Calculs
-  const totalIncome = transactions
-    .filter(t => t.categories?.type === 'income')
-    .reduce((s, t) => s + parseFloat(t.amount), 0)
-  const totalExpenses = transactions
-    .filter(t => t.categories?.type === 'expense')
-    .reduce((s, t) => s + parseFloat(t.amount), 0)
-  const balance = totalIncome - totalExpenses
-  const savingsRate = totalIncome > 0
-    ? Math.max(0, Math.round((balance / totalIncome) * 100))
-    : 0
+  const totalIncome   = transactions.filter(t => t.categories?.type === 'income').reduce((s, t) => s + parseFloat(t.amount), 0)
+  const totalExpenses = transactions.filter(t => t.categories?.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0)
+  const balance       = totalIncome - totalExpenses
+  const savingsRate   = totalIncome > 0 ? Math.max(0, Math.round((balance / totalIncome) * 100)) : 0
 
-  // Camembert par catégorie
   const byCategory = {}
   transactions.filter(t => t.categories?.type === 'expense').forEach(t => {
     const name = t.categories?.name || 'Autre'
@@ -126,11 +157,14 @@ export default function Reports({ session }) {
     .map(([name, value]) => ({ name, value: Math.round(value * 100) / 100 }))
     .sort((a, b) => b.value - a.value)
 
-  // Top 5 dépenses
   const top5 = [...transactions]
     .filter(t => t.categories?.type === 'expense')
     .sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount))
     .slice(0, 5)
+
+  const health = transactions.length > 0
+    ? computeHealthScore(totalIncome, totalExpenses, balance, byCategory)
+    : null
 
   return (
     <div>
@@ -195,7 +229,6 @@ export default function Reports({ session }) {
 
           {/* Graphiques */}
           <div className="charts-grid">
-            {/* Camembert */}
             <div className="card">
               <div className="card-header">
                 <h2 className="card-title">🍕 Dépenses par catégorie</h2>
@@ -218,7 +251,6 @@ export default function Reports({ session }) {
               )}
             </div>
 
-            {/* Barres comparatives 3 mois */}
             <div className="card">
               <div className="card-header">
                 <h2 className="card-title">📊 Comparaison sur 3 mois</h2>
@@ -230,7 +262,7 @@ export default function Reports({ session }) {
                   <YAxis tickFormatter={v => `${v}€`} tick={{ fontSize: 11 }} width={58} axisLine={false} tickLine={false} />
                   <Tooltip formatter={v => fmt(v)} />
                   <Legend />
-                  <Bar dataKey="Revenus" fill="#10B981" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  <Bar dataKey="Revenus"  fill="#10B981" radius={[4, 4, 0, 0]} maxBarSize={40} />
                   <Bar dataKey="Dépenses" fill="#EF4444" radius={[4, 4, 0, 0]} maxBarSize={40} />
                 </BarChart>
               </ResponsiveContainer>
@@ -264,50 +296,73 @@ export default function Reports({ session }) {
             </div>
           )}
 
-          {/* Analyse IA */}
-          <div className="card ai-analysis-card">
+          {/* Score de santé financière */}
+          <div className="card">
             <div className="card-header">
-              <h2 className="card-title">🤖 Analyse IA de ce mois</h2>
-              {!aiLoading && (
-                <button
-                  className="btn btn-primary btn-sm"
-                  onClick={handleAiAnalysis}
-                  disabled={transactions.length === 0}
-                >
-                  {aiAnalysis ? '🔄 Ré-analyser' : '✨ Analyser'}
-                </button>
-              )}
+              <h2 className="card-title">💚 Score de santé financière</h2>
             </div>
 
-            {aiLoading && (
-              <div className="ai-loading">
-                <div className="ai-loading-dots">
-                  <span /><span /><span />
-                </div>
-                <p>Claude analyse vos finances…</p>
-              </div>
-            )}
-
-            {aiError && (
-              <div className="alert alert-error" style={{ marginTop: '12px' }}>
-                ⚠️ {aiError}
-              </div>
-            )}
-
-            {aiAnalysis && !aiLoading && (
-              <div className="ai-result">
-                {aiAnalysis}
-              </div>
-            )}
-
-            {!aiAnalysis && !aiLoading && !aiError && (
-              <p className="ai-placeholder">
-                Cliquez sur <strong>Analyser</strong> pour obtenir des conseils personnalisés basés sur vos transactions de {MONTHS_FR[selectedMonth - 1].toLowerCase()}.
-                <br />
-                <span style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '6px', display: 'block' }}>
-                  Nécessite la Supabase Edge Function "analyze-budget" configurée avec une clé API Anthropic.
-                </span>
+            {!health ? (
+              <p style={{ color: '#6B7280', fontSize: '14px', padding: '12px 0' }}>
+                Ajoutez des transactions pour obtenir votre score.
               </p>
+            ) : (
+              <div className="health-score-wrapper">
+                {/* Jauge circulaire + score */}
+                <div className="health-score-top">
+                  <div className="health-gauge-container">
+                    <svg viewBox="0 0 120 120" className="health-gauge-svg">
+                      {/* Piste de fond */}
+                      <circle cx="60" cy="60" r="50" fill="none" stroke="#F3F4F6" strokeWidth="12" />
+                      {/* Arc coloré — on commence en haut (−90°) */}
+                      <circle
+                        cx="60" cy="60" r="50"
+                        fill="none"
+                        stroke={health.grade.color}
+                        strokeWidth="12"
+                        strokeDasharray={`${(health.total / 100) * 314} 314`}
+                        strokeLinecap="round"
+                        transform="rotate(-90 60 60)"
+                        style={{ transition: 'stroke-dasharray 0.8s ease' }}
+                      />
+                      <text x="60" y="55" textAnchor="middle" fontSize="26" fontWeight="700" fill={health.grade.color}>{health.total}</text>
+                      <text x="60" y="72" textAnchor="middle" fontSize="11" fill="#6B7280">/100</text>
+                    </svg>
+                    <div className="health-grade-label" style={{ color: health.grade.color }}>
+                      {health.grade.emoji} {health.grade.label}
+                    </div>
+                  </div>
+
+                  {/* Indicateurs détaillés */}
+                  <div className="health-indicators">
+                    {health.indicators.map((ind) => (
+                      <div key={ind.label} className="health-indicator-row">
+                        <div className="health-indicator-info">
+                          <span className="health-indicator-label">{ind.label}</span>
+                          <span className="health-indicator-value" style={{ color: ind.color }}>{ind.value}</span>
+                        </div>
+                        <div className="health-bar-track">
+                          <div
+                            className="health-bar-fill"
+                            style={{ width: `${(ind.score / ind.max) * 100}%`, background: ind.color }}
+                          />
+                        </div>
+                        <span className="health-indicator-pts">{ind.score}/{ind.max} pts</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Conseils */}
+                <div className="health-tips">
+                  {health.tips.map((tip, i) => (
+                    <div key={i} className="health-tip-row">
+                      <span className="health-tip-icon">{tip.icon}</span>
+                      <span className="health-tip-text" style={{ borderLeftColor: tip.color }}>{tip.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
         </>

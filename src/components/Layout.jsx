@@ -5,7 +5,7 @@ const NAV_ITEMS = [
   { id: 'dashboard',   icon: '📊', label: 'Tableau de bord',   short: 'Tableau'  },
   { id: 'transactions',icon: '💳', label: 'Transactions',       short: 'Transac.' },
   { id: 'recurring',   icon: '🔁', label: 'Récurrences',        short: 'Récurr.'  },
-  { id: 'reports',     icon: '📈', label: 'Rapports & IA',      short: 'Rapports' },
+  { id: 'reports',     icon: '📈', label: 'Rapports',            short: 'Rapports' },
   { id: 'budget',      icon: '🎯', label: 'Objectifs budget',   short: 'Objectifs'},
 ]
 
