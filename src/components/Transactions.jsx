@@ -262,15 +262,15 @@ export default function Transactions({ session }) {
       <div className="transactions-summary">
         <div className="summary-chip income">
           <span className="label">Revenus</span>
-          <span className="value" style={{ color: '#10B981' }}>{fmt(totalIncome)}</span>
+          <span className="value" style={{ color: 'var(--success)' }}>{fmt(totalIncome)}</span>
         </div>
         <div className="summary-chip expense">
           <span className="label">Dépenses</span>
-          <span className="value" style={{ color: '#EF4444' }}>{fmt(totalExpenses)}</span>
+          <span className="value" style={{ color: 'var(--danger)' }}>{fmt(totalExpenses)}</span>
         </div>
         <div className="summary-chip">
           <span className="label">Solde</span>
-          <span className="value" style={{ color: balance >= 0 ? '#10B981' : '#EF4444' }}>
+          <span className="value" style={{ color: balance >= 0 ? 'var(--success)' : 'var(--danger)' }}>
             {fmt(balance)}
           </span>
         </div>
@@ -325,9 +325,17 @@ export default function Transactions({ session }) {
               )}
             </div>
             <div className="transaction-list">
-              {filtered.map((t) => (
+              {filtered.map((t) => {
+                const catColor = t.categories?.color || '#6366f1'
+                const isIncome = t.categories?.type === 'income'
+                return (
                 <div key={t.id} className="transaction-item">
-                  <div className="transaction-category-icon">{t.categories?.icon || '📦'}</div>
+                  <div
+                    className="transaction-category-icon"
+                    style={{ background: `${catColor}22`, borderColor: `${catColor}33` }}
+                  >
+                    {t.categories?.icon || '📦'}
+                  </div>
                   <div className="transaction-details">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span className="transaction-desc">
@@ -344,11 +352,16 @@ export default function Transactions({ session }) {
                           month: 'short',
                         })}
                       </span>
-                      <span className="transaction-cat-name">{t.categories?.name || '—'}</span>
+                      <span className="transaction-cat-name" style={{ color: catColor }}>
+                        {t.categories?.name || '—'}
+                      </span>
+                      {t.user_id !== session.user.id && (
+                        <span className="badge-partner">👥 Partenaire</span>
+                      )}
                     </div>
                   </div>
                   <span className={`transaction-amount ${t.categories?.type}`}>
-                    {t.categories?.type === 'income' ? '+' : '−'}{fmt(t.amount)}
+                    {isIncome ? '+' : '−'}{fmt(t.amount)}
                   </span>
                   <button
                     className="btn-icon"
@@ -359,7 +372,8 @@ export default function Transactions({ session }) {
                     {deleting === t.id ? '⏳' : '🗑️'}
                   </button>
                 </div>
-              ))}
+                )
+              })}
             </div>
           </>
         )}

@@ -1725,3 +1725,124 @@ body {
   .wl-grid { grid-template-columns: 1fr; }
   .wl-summary-value { font-size: 16px; }
 }
+
+/* ============================
+   Badge partenaire
+   ============================ */
+.badge-partner {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: rgba(74,222,128,0.1);
+  color: var(--success);
+  white-space: nowrap;
+}
+
+/* ============================
+   Sidebar — séparateur extra nav
+   ============================ */
+.sidebar-nav-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 8px 4px;
+}
+
+/* ============================
+   Compte partagé (Household)
+   ============================ */
+.hh-onboarding {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 680px;
+}
+
+.hh-explainer {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.hh-explainer-icon {
+  font-size: 40px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.hh-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.hh-code-input {
+  text-transform: uppercase;
+  letter-spacing: 6px !important;
+  font-size: 22px !important;
+  text-align: center;
+  font-weight: 700 !important;
+}
+
+.hh-status-badge {
+  background: rgba(74,222,128,0.12);
+  color: var(--success);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.hh-member-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.hh-member-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.hh-member-avatar.me {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.hh-member-avatar.partner {
+  background: rgba(74,222,128,0.12);
+  color: var(--success);
+}
+
+.hh-invite-box {
+  background: rgba(129,140,248,0.07);
+  border: 1px dashed rgba(129,140,248,0.3);
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.hh-invite-code {
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: 8px;
+  color: var(--primary);
+  font-family: 'Courier New', monospace;
+}
+
+@media (max-width: 768px) {
+  .hh-options-grid { grid-template-columns: 1fr; }
+  .hh-explainer { flex-direction: column; gap: 12px; }
+  .hh-invite-code { font-size: 24px; letter-spacing: 5px; }
+}

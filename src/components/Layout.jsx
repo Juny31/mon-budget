@@ -10,6 +10,11 @@ const NAV_ITEMS = [
   { id: 'wishlist',    icon: '🛍️', label: 'Liste de souhaits',  short: 'Souhaits' },
 ]
 
+// Uniquement dans la sidebar (pas dans la bottom nav mobile)
+const SIDEBAR_EXTRA = [
+  { id: 'household', icon: '👫', label: 'Compte partagé' },
+]
+
 export default function Layout({ children, currentPage, setCurrentPage, session }) {
   const [showUserMenu, setShowUserMenu] = useState(false)
 
@@ -30,6 +35,17 @@ export default function Layout({ children, currentPage, setCurrentPage, session 
 
         <nav className="sidebar-nav">
           {NAV_ITEMS.map((item) => (
+            <button
+              key={item.id}
+              className={`nav-item ${currentPage === item.id ? 'active' : ''}`}
+              onClick={() => setCurrentPage(item.id)}
+            >
+              <span className="nav-item-icon">{item.icon}</span>
+              {item.label}
+            </button>
+          ))}
+          <div className="sidebar-nav-divider" />
+          {SIDEBAR_EXTRA.map((item) => (
             <button
               key={item.id}
               className={`nav-item ${currentPage === item.id ? 'active' : ''}`}
@@ -80,7 +96,14 @@ export default function Layout({ children, currentPage, setCurrentPage, session 
                 <div className="mobile-user-email">{session?.user?.email}</div>
                 <button
                   className="btn btn-ghost"
-                  style={{ width: '100%', fontSize: '13px', marginTop: '8px' }}
+                  style={{ width: '100%', fontSize: '13px', marginTop: '8px', justifyContent: 'flex-start' }}
+                  onClick={() => { setCurrentPage('household'); setShowUserMenu(false) }}
+                >
+                  👫 Compte partagé
+                </button>
+                <button
+                  className="btn btn-ghost"
+                  style={{ width: '100%', fontSize: '13px', marginTop: '4px' }}
                   onClick={handleSignOut}
                 >
                   🚪 Déconnexion

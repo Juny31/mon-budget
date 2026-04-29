@@ -9,6 +9,7 @@ import BudgetGoals from './components/BudgetGoals'
 import RecurringTransactions from './components/RecurringTransactions'
 import Reports from './components/Reports'
 import WishList from './components/WishList'
+import HouseholdSettings from './components/HouseholdSettings'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -59,6 +60,7 @@ export default function App() {
       {currentPage === 'recurring'   && <RecurringTransactions session={session} />}
       {currentPage === 'reports'     && <Reports session={session} />}
       {currentPage === 'wishlist'    && <WishList session={session} />}
+      {currentPage === 'household'   && <HouseholdSettings session={session} />}
     </Layout>
   )
 }
