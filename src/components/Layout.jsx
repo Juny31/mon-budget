@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { id: 'recurring',   icon: '🔁', label: 'Récurrences',        short: 'Récurr.'  },
   { id: 'reports',     icon: '📈', label: 'Rapports',            short: 'Rapports' },
   { id: 'budget',      icon: '🎯', label: 'Objectifs budget',   short: 'Objectifs'},
+  { id: 'wishlist',    icon: '🛍️', label: 'Liste de souhaits',  short: 'Souhaits' },
 ]
 
 export default function Layout({ children, currentPage, setCurrentPage, session }) {
@@ -23,7 +24,7 @@ export default function Layout({ children, currentPage, setCurrentPage, session 
       {/* Sidebar — desktop uniquement */}
       <aside className="sidebar">
         <div className="sidebar-logo">
-          <span className="sidebar-logo-icon">💰</span>
+          <div className="sidebar-logo-icon">💰</div>
           <h2>BudgetApp</h2>
         </div>
 
@@ -58,7 +59,7 @@ export default function Layout({ children, currentPage, setCurrentPage, session 
       {/* En-tête — mobile uniquement */}
       <header className="mobile-header">
         <div className="mobile-header-logo">
-          <span style={{ fontSize: '22px' }}>💰</span>
+          <div className="mobile-header-logo-icon">💰</div>
           <span className="mobile-header-title">BudgetApp</span>
         </div>
         <div style={{ position: 'relative' }}>
