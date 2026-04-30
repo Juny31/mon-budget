@@ -39,7 +39,6 @@ export default function Transactions({ session }) {
     const { data } = await supabase
       .from('transactions')
       .select('*, categories(name, type, icon, color)')
-      .eq('user_id', session.user.id)
       .gte('transaction_date', start)
       .lte('transaction_date', end)
       .order('transaction_date', { ascending: false })

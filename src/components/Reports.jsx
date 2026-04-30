@@ -27,7 +27,6 @@ async function fetchMonthData(userId, year, month) {
   const { data } = await supabase
     .from('transactions')
     .select('*, categories(name, type, icon, color)')
-    .eq('user_id', userId)
     .gte('transaction_date', start)
     .lte('transaction_date', end)
   return data || []
@@ -101,10 +100,10 @@ function computeHealthScore(totalIncome, totalExpenses, balance, byCategory) {
   ]
 
   const grade =
-    total >= 80 ? { label: 'Excellent', color: '#10B981', emoji: '🌟' } :
-    total >= 60 ? { label: 'Bien',      color: '#3B82F6', emoji: '👍' } :
-    total >= 40 ? { label: 'Moyen',     color: '#F59E0B', emoji: '⚠️'  } :
-                  { label: 'À revoir',  color: '#EF4444', emoji: '🔴' }
+    total >= 80 ? { label: 'Excellent',    color: '#4ade80', cls: 'grade-great'  } :
+    total >= 60 ? { label: 'Bonne santé',  color: '#4ade80', cls: 'grade-great'  } :
+    total >= 40 ? { label: 'Moyen',        color: '#fbbf24', cls: 'grade-medium' } :
+                  { label: 'À améliorer',  color: '#f87171', cls: 'grade-poor'   }
 
   return { total, grade, tips, indicators }
 }
@@ -196,31 +195,31 @@ export default function Reports({ session }) {
           {/* Stats du mois */}
           <div className="stats-grid">
             <div className="stat-card income">
-              <div className="stat-icon-wrapper" style={{ background: '#D1FAE5' }}>📈</div>
+              <div className="stat-icon-wrapper" style={{ background: 'rgba(74,222,128,0.12)' }}>📈</div>
               <div className="stat-info">
                 <span className="stat-label">Revenus</span>
-                <span className="stat-value" style={{ color: '#10B981' }}>{fmt(totalIncome)}</span>
+                <span className="stat-value" style={{ color: 'var(--success)' }}>{fmt(totalIncome)}</span>
               </div>
             </div>
             <div className="stat-card expense">
-              <div className="stat-icon-wrapper" style={{ background: '#FEE2E2' }}>📉</div>
+              <div className="stat-icon-wrapper" style={{ background: 'rgba(248,113,113,0.12)' }}>📉</div>
               <div className="stat-info">
                 <span className="stat-label">Dépenses</span>
-                <span className="stat-value" style={{ color: '#EF4444' }}>{fmt(totalExpenses)}</span>
+                <span className="stat-value" style={{ color: 'var(--danger)' }}>{fmt(totalExpenses)}</span>
               </div>
             </div>
             <div className="stat-card balance">
-              <div className="stat-icon-wrapper" style={{ background: '#EEF2FF' }}>💰</div>
+              <div className="stat-icon-wrapper" style={{ background: 'rgba(129,140,248,0.12)' }}>💰</div>
               <div className="stat-info">
                 <span className="stat-label">Solde</span>
-                <span className="stat-value" style={{ color: balance >= 0 ? '#10B981' : '#EF4444' }}>{fmt(balance)}</span>
+                <span className="stat-value" style={{ color: balance >= 0 ? 'var(--success)' : 'var(--danger)' }}>{fmt(balance)}</span>
               </div>
             </div>
             <div className="stat-card savings">
-              <div className="stat-icon-wrapper" style={{ background: '#FEF3C7' }}>🏦</div>
+              <div className="stat-icon-wrapper" style={{ background: 'rgba(251,191,36,0.12)' }}>🏦</div>
               <div className="stat-info">
                 <span className="stat-label">Taux d'épargne</span>
-                <span className="stat-value" style={{ color: savingsRate >= 20 ? '#10B981' : savingsRate >= 10 ? '#F59E0B' : '#EF4444' }}>
+                <span className="stat-value" style={{ color: savingsRate >= 20 ? 'var(--success)' : savingsRate >= 10 ? 'var(--warning)' : 'var(--danger)' }}>
                   {savingsRate}%
                 </span>
               </div>
@@ -236,11 +235,11 @@ export default function Reports({ session }) {
               {pieData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={260}>
                   <PieChart>
-                    <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} innerRadius={48}>
+                    <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} innerRadius={52}>
                       {pieData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                     </Pie>
-                    <Tooltip formatter={v => fmt(v)} />
-                    <Legend />
+                    <Tooltip formatter={v => fmt(v)} contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#f1f5f9' }} />
+                    <Legend wrapperStyle={{ color: '#94a3b8', fontSize: '12px' }} />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
@@ -257,13 +256,13 @@ export default function Reports({ session }) {
               </div>
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={barData} margin={{ top: 5, right: 8, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <YAxis tickFormatter={v => `${v}€`} tick={{ fontSize: 11 }} width={58} axisLine={false} tickLine={false} />
-                  <Tooltip formatter={v => fmt(v)} />
-                  <Legend />
-                  <Bar dataKey="Revenus"  fill="#10B981" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                  <Bar dataKey="Dépenses" fill="#EF4444" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+                  <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                  <YAxis tickFormatter={v => `${v}€`} tick={{ fontSize: 11, fill: '#94a3b8' }} width={58} axisLine={false} tickLine={false} />
+                  <Tooltip formatter={v => fmt(v)} contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#f1f5f9' }} />
+                  <Legend wrapperStyle={{ color: '#94a3b8' }} />
+                  <Bar dataKey="Revenus"  fill="#4ade80" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  <Bar dataKey="Dépenses" fill="#f87171" radius={[4, 4, 0, 0]} maxBarSize={40} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -276,22 +275,27 @@ export default function Reports({ session }) {
                 <h2 className="card-title">🔝 Top 5 dépenses du mois</h2>
               </div>
               <div className="transaction-list">
-                {top5.map((t, i) => (
+                {top5.map((t, i) => {
+                  const catColor = t.categories?.color || '#6366f1'
+                  return (
                   <div key={t.id} className="transaction-item">
                     <div className="top5-rank">#{i + 1}</div>
-                    <div className="transaction-category-icon">{t.categories?.icon || '📦'}</div>
+                    <div className="transaction-category-icon" style={{ background: `${catColor}22`, borderColor: `${catColor}33` }}>
+                      {t.categories?.icon || '📦'}
+                    </div>
                     <div className="transaction-details">
                       <span className="transaction-desc">{t.description || t.categories?.name || '—'}</span>
                       <div className="transaction-meta">
                         <span className="transaction-date">
                           {new Date(t.transaction_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                         </span>
-                        <span className="transaction-cat-name">{t.categories?.name || '—'}</span>
+                        <span className="transaction-cat-name" style={{ color: catColor }}>{t.categories?.name || '—'}</span>
                       </div>
                     </div>
                     <span className="transaction-amount expense">−{fmt(t.amount)}</span>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}
@@ -303,7 +307,7 @@ export default function Reports({ session }) {
             </div>
 
             {!health ? (
-              <p style={{ color: '#6B7280', fontSize: '14px', padding: '12px 0' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '14px', padding: '12px 0' }}>
                 Ajoutez des transactions pour obtenir votre score.
               </p>
             ) : (
@@ -312,24 +316,30 @@ export default function Reports({ session }) {
                 <div className="health-score-top">
                   <div className="health-gauge-container">
                     <svg viewBox="0 0 120 120" className="health-gauge-svg">
+                      <defs>
+                        <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor={health.grade.color} stopOpacity="0.7" />
+                          <stop offset="100%" stopColor={health.grade.color} />
+                        </linearGradient>
+                      </defs>
                       {/* Piste de fond */}
-                      <circle cx="60" cy="60" r="50" fill="none" stroke="#F3F4F6" strokeWidth="12" />
-                      {/* Arc coloré — on commence en haut (−90°) */}
+                      <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="12" />
+                      {/* Arc coloré */}
                       <circle
                         cx="60" cy="60" r="50"
                         fill="none"
-                        stroke={health.grade.color}
+                        stroke="url(#gaugeGrad)"
                         strokeWidth="12"
                         strokeDasharray={`${(health.total / 100) * 314} 314`}
                         strokeLinecap="round"
                         transform="rotate(-90 60 60)"
                         style={{ transition: 'stroke-dasharray 0.8s ease' }}
                       />
-                      <text x="60" y="55" textAnchor="middle" fontSize="26" fontWeight="700" fill={health.grade.color}>{health.total}</text>
-                      <text x="60" y="72" textAnchor="middle" fontSize="11" fill="#6B7280">/100</text>
+                      <text x="60" y="56" textAnchor="middle" fontSize="28" fontWeight="800" fill={health.grade.color}>{health.total}</text>
+                      <text x="60" y="73" textAnchor="middle" fontSize="11" fill="rgba(255,255,255,0.35)">/100</text>
                     </svg>
-                    <div className="health-grade-label" style={{ color: health.grade.color }}>
-                      {health.grade.emoji} {health.grade.label}
+                    <div className={`health-grade-label ${health.grade.cls}`}>
+                      {health.grade.label}
                     </div>
                   </div>
 

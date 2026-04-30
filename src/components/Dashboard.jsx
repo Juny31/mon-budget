@@ -27,11 +27,10 @@ export default function Dashboard({ session, setCurrentPage }) {
     const startDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`
     const endDate   = new Date(currentYear, currentMonth, 0).toISOString().split('T')[0]
 
-    // Transactions du mois en cours
+    // Transactions du mois en cours (RLS gère le filtrage foyer)
     const { data: txns } = await supabase
       .from('transactions')
       .select('*, categories(name, type, icon, color)')
-      .eq('user_id', session.user.id)
       .gte('transaction_date', startDate)
       .lte('transaction_date', endDate)
       .order('transaction_date', { ascending: false })
@@ -54,7 +53,6 @@ export default function Dashboard({ session, setCurrentPage }) {
     const { data: prevTxns } = await supabase
       .from('transactions')
       .select('amount, categories(type)')
-      .eq('user_id', session.user.id)
       .gte('transaction_date', prevStart)
       .lte('transaction_date', prevEnd)
 

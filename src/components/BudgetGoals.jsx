@@ -59,7 +59,6 @@ export default function BudgetGoals({ session }) {
     const { data: txns } = await supabase
       .from('transactions')
       .select('category_id, amount, categories(type)')
-      .eq('user_id', session.user.id)
       .gte('transaction_date', start)
       .lte('transaction_date', end)
 
