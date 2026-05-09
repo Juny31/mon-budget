@@ -15,6 +15,7 @@ export default function Transactions({ session }) {
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1)
   const [selectedYear, setSelectedYear] = useState(now.getFullYear())
   const [filter, setFilter] = useState('all')
+  const [vue, setVue] = useState('mine') // 'mine' | 'foyer'
   const [transactions, setTransactions] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
@@ -78,11 +79,20 @@ export default function Transactions({ session }) {
     maxAmount,
   ].filter(Boolean).length
 
+  // Transactions selon la vue (mes données / foyer complet)
+  const visibleTransactions = useMemo(() =>
+    vue === 'mine'
+      ? transactions.filter((t) => t.user_id === session.user.id)
+      : transactions
+  , [transactions, vue, session.user.id])
+
+  const hasPartner = transactions.some((t) => t.user_id !== session.user.id)
+
   // Application de tous les filtres
   const filtered = useMemo(() => {
     let result = filter === 'all'
-      ? transactions
-      : transactions.filter((t) => t.categories?.type === filter)
+      ? visibleTransactions
+      : visibleTransactions.filter((t) => t.categories?.type === filter)
 
     if (searchTerm.trim()) {
       const q = searchTerm.toLowerCase()
@@ -106,13 +116,13 @@ export default function Transactions({ session }) {
     }
 
     return result
-  }, [transactions, filter, searchTerm, selectedCategory, minAmount, maxAmount])
+  }, [visibleTransactions, filter, searchTerm, selectedCategory, minAmount, maxAmount])
 
-  const totalIncome = transactions
+  const totalIncome = visibleTransactions
     .filter((t) => t.categories?.type === 'income')
     .reduce((s, t) => s + parseFloat(t.amount), 0)
 
-  const totalExpenses = transactions
+  const totalExpenses = visibleTransactions
     .filter((t) => t.categories?.type === 'expense')
     .reduce((s, t) => s + parseFloat(t.amount), 0)
 
@@ -176,6 +186,20 @@ export default function Transactions({ session }) {
             )
           )}
         </div>
+
+        {/* Toggle vue foyer */}
+        {hasPartner && (
+          <div className="type-filter">
+            <button
+              className={`type-filter-btn ${vue === 'mine' ? 'active' : ''}`}
+              onClick={() => setVue('mine')}
+            >🧑 Moi</button>
+            <button
+              className={`type-filter-btn ${vue === 'foyer' ? 'active' : ''}`}
+              onClick={() => setVue('foyer')}
+            >👫 Foyer</button>
+          </div>
+        )}
 
         {/* Bouton filtres avancés */}
         <button

@@ -11,9 +11,11 @@ const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin',
 export default function Dashboard({ session, setCurrentPage }) {
   const [stats, setStats]           = useState({ income: 0, expenses: 0, balance: 0 })
   const [prevBalance, setPrevBalance] = useState(null)
+  const [allTxns, setAllTxns]       = useState([])
   const [recentTxns, setRecentTxns] = useState([])
   const [loading, setLoading]       = useState(true)
   const [showForm, setShowForm]     = useState(false)
+  const [vue, setVue]               = useState('mine') // 'mine' | 'foyer'
 
   const now          = new Date()
   const currentMonth = now.getMonth() + 1
@@ -36,12 +38,14 @@ export default function Dashboard({ session, setCurrentPage }) {
       .order('transaction_date', { ascending: false })
 
     if (txns) {
-      const income   = txns.filter(t => t.categories?.type === 'income')
+      setAllTxns(txns)
+      const mine = txns.filter(t => t.user_id === session.user.id)
+      const income   = mine.filter(t => t.categories?.type === 'income')
                            .reduce((s, t) => s + parseFloat(t.amount), 0)
-      const expenses = txns.filter(t => t.categories?.type === 'expense')
+      const expenses = mine.filter(t => t.categories?.type === 'expense')
                            .reduce((s, t) => s + parseFloat(t.amount), 0)
       setStats({ income, expenses, balance: income - expenses })
-      setRecentTxns(txns.slice(0, 6))
+      setRecentTxns(mine.slice(0, 6))
     }
 
     // Mois précédent pour comparaison %
@@ -73,8 +77,20 @@ export default function Dashboard({ session, setCurrentPage }) {
     currentMonth === 1 ? 11 : currentMonth - 2
   ]
 
+  const hasPartner = allTxns.some(t => t.user_id !== session.user.id)
+
+  // Recalcul selon la vue sélectionnée
+  const viewTxns = vue === 'mine'
+    ? allTxns.filter(t => t.user_id === session.user.id)
+    : allTxns
+
+  const viewIncome   = viewTxns.filter(t => t.categories?.type === 'income').reduce((s, t) => s + parseFloat(t.amount), 0)
+  const viewExpenses = viewTxns.filter(t => t.categories?.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0)
+  const viewBalance  = viewIncome - viewExpenses
+  const viewRecent   = viewTxns.slice(0, 6)
+
   const changePercent = prevBalance !== null && prevBalance !== 0
-    ? Math.round(((stats.balance - prevBalance) / Math.abs(prevBalance)) * 100)
+    ? Math.round(((viewBalance - prevBalance) / Math.abs(prevBalance)) * 100)
     : null
 
   const monthName = new Date(currentYear, currentMonth - 1).toLocaleDateString('fr-FR', {
@@ -109,10 +125,24 @@ export default function Dashboard({ session, setCurrentPage }) {
         </button>
       </div>
 
+      {/* Toggle vue foyer */}
+      {hasPartner && (
+        <div className="type-filter" style={{ marginBottom: '16px' }}>
+          <button className={`type-filter-btn ${vue === 'mine' ? 'active' : ''}`} onClick={() => setVue('mine')}>
+            🧑 Mes données
+          </button>
+          <button className={`type-filter-btn ${vue === 'foyer' ? 'active' : ''}`} onClick={() => setVue('foyer')}>
+            👫 Foyer complet
+          </button>
+        </div>
+      )}
+
       {/* ── Hero balance card ── */}
       <div className="balance-hero-card">
-        <div className="balance-hero-label">Solde du mois</div>
-        <div className="balance-hero-amount">{fmt(stats.balance)}</div>
+        <div className="balance-hero-label">
+          {vue === 'foyer' ? 'Solde du foyer' : 'Mon solde du mois'}
+        </div>
+        <div className="balance-hero-amount">{fmt(viewBalance)}</div>
 
         {changePercent !== null ? (
           <div className={`balance-change-chip ${changePercent >= 0 ? 'positive' : 'negative'}`}>
@@ -125,16 +155,16 @@ export default function Dashboard({ session, setCurrentPage }) {
         <div className="kpi-chips-row">
           <div className="kpi-chip">
             <span className="kpi-chip-label">Revenus</span>
-            <span className="kpi-chip-value income">{fmt(stats.income)}</span>
+            <span className="kpi-chip-value income">{fmt(viewIncome)}</span>
           </div>
           <div className="kpi-chip">
             <span className="kpi-chip-label">Dépenses</span>
-            <span className="kpi-chip-value expense">-{fmt(stats.expenses)}</span>
+            <span className="kpi-chip-value expense">-{fmt(viewExpenses)}</span>
           </div>
           <div className="kpi-chip">
             <span className="kpi-chip-label">Solde</span>
-            <span className={`kpi-chip-value ${stats.balance >= 0 ? 'income' : 'expense'}`}>
-              {fmt(stats.balance)}
+            <span className={`kpi-chip-value ${viewBalance >= 0 ? 'income' : 'expense'}`}>
+              {fmt(viewBalance)}
             </span>
           </div>
         </div>
@@ -149,9 +179,9 @@ export default function Dashboard({ session, setCurrentPage }) {
           </button>
         </div>
 
-        {recentTxns.length > 0 ? (
+        {viewRecent.length > 0 ? (
           <div className="transaction-list">
-            {recentTxns.map((t) => {
+            {viewRecent.map((t) => {
               const catColor = t.categories?.color || '#6366f1'
               const isIncome = t.categories?.type === 'income'
               return (
