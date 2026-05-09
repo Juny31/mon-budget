@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import TransactionForm from './TransactionForm'
-
-const fmt = (n) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n || 0)
+import { useFmt } from '../lib/CurrencyContext'
 
 const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin',
                    'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc']
 
 export default function Dashboard({ session, setCurrentPage }) {
+  const fmt = useFmt()
   const [stats, setStats]           = useState({ income: 0, expenses: 0, balance: 0 })
   const [prevBalance, setPrevBalance] = useState(null)
   const [allTxns, setAllTxns]       = useState([])

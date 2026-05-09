@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import { generateDueTransactions } from './lib/recurringService'
+import { CurrencyProvider } from './lib/CurrencyContext'
 import Auth from './components/Auth'
 import Layout from './components/Layout'
 import Dashboard from './components/Dashboard'
@@ -53,6 +54,7 @@ export default function App() {
   if (!session) return <Auth />
 
   return (
+    <CurrencyProvider>
     <Layout currentPage={currentPage} setCurrentPage={setCurrentPage} session={session}>
       {currentPage === 'dashboard'   && <Dashboard session={session} setCurrentPage={setCurrentPage} />}
       {currentPage === 'transactions' && <Transactions session={session} />}
@@ -62,5 +64,6 @@ export default function App() {
       {currentPage === 'wishlist'    && <WishList session={session} />}
       {currentPage === 'household'   && <HouseholdSettings session={session} />}
     </Layout>
+    </CurrencyProvider>
   )
 }

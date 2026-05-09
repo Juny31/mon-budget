@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { useFmt } from '../lib/CurrencyContext'
 
 const DAYS_FR = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi']
-
-const fmt = (n) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n || 0)
 
 function frequencyLabel(r) {
   if (r.frequency === 'monthly') return `Tous les ${r.day_of_month} du mois`
@@ -51,6 +49,7 @@ const EMPTY_FORM = {
 }
 
 export default function RecurringTransactions({ session }) {
+  const fmt = useFmt()
   const [recurrings, setRecurrings] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)

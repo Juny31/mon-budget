@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { useFmt } from '../lib/CurrencyContext'
 import {
   PieChart, Pie, Cell,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -17,9 +18,6 @@ const MONTHS_FR = [
 ]
 const MONTHS_SHORT = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin',
                       'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc']
-
-const fmt = (n) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n || 0)
 
 async function fetchMonthData(userId, year, month) {
   const start = `${year}-${String(month).padStart(2, '0')}-01`
@@ -109,6 +107,7 @@ function computeHealthScore(totalIncome, totalExpenses, balance, byCategory) {
 }
 
 export default function Reports({ session }) {
+  const fmt = useFmt()
   const now = new Date()
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1)
   const [selectedYear, setSelectedYear] = useState(now.getFullYear())

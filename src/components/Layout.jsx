@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { useCurrency, CURRENCIES } from '../lib/CurrencyContext'
 
 const NAV_ITEMS = [
   { id: 'dashboard',   icon: '📊', label: 'Tableau de bord',   short: 'Tableau'  },
@@ -17,6 +18,7 @@ const SIDEBAR_EXTRA = [
 
 export default function Layout({ children, currentPage, setCurrentPage, session }) {
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const { currency, setCurrency } = useCurrency()
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -62,6 +64,25 @@ export default function Layout({ children, currentPage, setCurrentPage, session 
             <div className="user-avatar">{userInitial}</div>
             <span className="user-email">{session?.user?.email}</span>
           </div>
+          <select
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+            style={{
+              width: '100%',
+              marginBottom: '8px',
+              padding: '6px 8px',
+              borderRadius: '8px',
+              border: '1px solid var(--border)',
+              background: 'var(--surface)',
+              color: 'var(--text)',
+              fontSize: '13px',
+              cursor: 'pointer',
+            }}
+          >
+            {CURRENCIES.map((c) => (
+              <option key={c.code} value={c.code}>{c.label}</option>
+            ))}
+          </select>
           <button
             className="btn btn-ghost"
             style={{ width: '100%', fontSize: '13px' }}
@@ -94,6 +115,28 @@ export default function Layout({ children, currentPage, setCurrentPage, session 
               />
               <div className="mobile-user-menu">
                 <div className="mobile-user-email">{session?.user?.email}</div>
+                <div style={{ marginTop: '10px' }}>
+                  <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                    💱 Devise
+                  </label>
+                  <select
+                    value={currency}
+                    onChange={(e) => { setCurrency(e.target.value); setShowUserMenu(false) }}
+                    style={{
+                      width: '100%',
+                      padding: '6px 8px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--border)',
+                      background: 'var(--surface)',
+                      color: 'var(--text)',
+                      fontSize: '13px',
+                    }}
+                  >
+                    {CURRENCIES.map((c) => (
+                      <option key={c.code} value={c.code}>{c.label}</option>
+                    ))}
+                  </select>
+                </div>
                 <button
                   className="btn btn-ghost"
                   style={{ width: '100%', fontSize: '13px', marginTop: '8px', justifyContent: 'flex-start' }}

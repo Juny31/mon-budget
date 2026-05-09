@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-
-const fmt = (n) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n || 0)
+import { useFmt } from '../lib/CurrencyContext'
 
 const CATEGORIES = [
   'Électronique', 'Mode & Vêtements', 'Maison & Déco', 'Loisirs',
@@ -28,6 +26,7 @@ const EMPTY_FORM = {
 }
 
 export default function WishList({ session }) {
+  const fmt = useFmt()
   const [items, setItems]               = useState([])
   const [loading, setLoading]           = useState(true)
   const [showForm, setShowForm]         = useState(false)
