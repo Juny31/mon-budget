@@ -114,9 +114,17 @@ export default function RecurringTransactions({ session }) {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Supprimer cette récurrence ? Les transactions déjà générées seront conservées.')) return
+    if (!window.confirm('Supprimer cette récurrence ? Les transactions déjà générées seront aussi supprimées.')) return
     setDeleting(id)
-    await supabase.from('recurring_transactions').delete().eq('id', id)
+    // Supprimer d'abord les transactions générées par cette récurrence
+    await supabase.from('transactions').delete().eq('recurring_id', id)
+    // Puis supprimer la récurrence elle-même
+    const { error } = await supabase.from('recurring_transactions').delete().eq('id', id)
+    if (error) {
+      alert('Erreur lors de la suppression. Vérifie les politiques RLS dans Supabase.')
+      setDeleting(null)
+      return
+    }
     setRecurrings((prev) => prev.filter((x) => x.id !== id))
     setDeleting(null)
   }
