@@ -31,7 +31,7 @@ async function fetchMonthData(userId, year, month) {
 }
 
 // ── Calcul du score de santé financière ─────────────────────────────────────
-function computeHealthScore(totalIncome, totalExpenses, balance, byCategory) {
+function computeHealthScore(totalIncome, totalExpenses, balance, byCategory, fmt) {
   if (totalIncome === 0) return null
 
   const savingsRate = Math.max(0, (balance / totalIncome) * 100)
@@ -161,7 +161,7 @@ export default function Reports({ session }) {
     .slice(0, 5)
 
   const health = transactions.length > 0
-    ? computeHealthScore(totalIncome, totalExpenses, balance, byCategory)
+    ? computeHealthScore(totalIncome, totalExpenses, balance, byCategory, fmt)
     : null
 
   return (
